@@ -20,10 +20,10 @@ interface BlogCardProps {
   likes: number;
   comments: number;
   featured?: boolean;
+  slug: string;
 }
 
 const BlogCard = ({ 
-  id, 
   title, 
   excerpt, 
   author, 
@@ -33,13 +33,14 @@ const BlogCard = ({
   tags, 
   likes, 
   comments,
-  featured = false 
+  featured = false,
+  slug 
 }: BlogCardProps) => {
   return (
     <Card className={`group overflow-hidden transition-all duration-300 hover:shadow-medium ${
       featured ? 'ring-2 ring-blog-primary/20' : ''
     }`}>
-      <Link to={`/post/${id}`}>
+      <Link to={`/post/${slug}`}>
         <div className="aspect-[16/10] overflow-hidden">
           <img 
             src={image} 
@@ -67,7 +68,7 @@ const BlogCard = ({
           )}
         </div>
         
-        <Link to={`/post/${id}`}>
+        <Link to={`/post/${slug}`}>
           <h3 className="font-heading text-xl font-semibold mb-3 line-clamp-2 group-hover:text-blog-primary transition-colors">
             {title}
           </h3>

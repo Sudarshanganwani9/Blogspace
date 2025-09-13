@@ -4,117 +4,22 @@ import FeaturedPost from "@/components/blog/FeaturedPost";
 import BlogCard from "@/components/blog/BlogCard";
 import CategoryFilter from "@/components/blog/CategoryFilter";
 import Sidebar from "@/components/blog/Sidebar";
+import { useBlogPosts, useCategories } from "@/hooks/useBlogData";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const { posts, loading: postsLoading } = useBlogPosts(selectedCategory);
+  const { categories, loading: categoriesLoading } = useCategories();
 
-  // Mock data - in real app this would come from Supabase
-  const featuredPost = {
-    id: "1",
-    title: "Building Modern Web Applications with React and TypeScript",
-    excerpt: "Discover the best practices for creating scalable, maintainable React applications using TypeScript. Learn about component architecture, state management, and testing strategies.",
-    author: {
-      name: "Sarah Chen",
-      avatar: "",
-      role: "Senior Developer"
-    },
-    publishedAt: "Nov 12, 2024",
-    readTime: "8 min read",
-    image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&h=600&fit=crop&crop=entropy&auto=format",
-    tags: ["React", "TypeScript", "Web Development"],
-    likes: 234,
-    comments: 45
-  };
+  // Get featured post (first featured post or first post)
+  const featuredPost = posts.find(post => post.featured) || posts[0];
+  
+  // Get non-featured posts
+  const regularPosts = posts.filter(post => !post.featured || post.id !== featuredPost?.id);
 
-  const blogPosts = [
-    {
-      id: "2",
-      title: "Understanding MongoDB Aggregation Pipeline",
-      excerpt: "Deep dive into MongoDB's powerful aggregation framework and learn how to process and analyze your data efficiently.",
-      author: {
-        name: "Mike Johnson",
-        avatar: "",
-        role: "Backend Developer"
-      },
-      publishedAt: "Nov 10, 2024",
-      readTime: "12 min read",
-      image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=500&fit=crop&crop=entropy&auto=format",
-      tags: ["MongoDB", "Database", "Backend"],
-      likes: 156,
-      comments: 23,
-      featured: true
-    },
-    {
-      id: "3",
-      title: "Express.js Best Practices for Production",
-      excerpt: "Learn essential Express.js patterns and practices for building robust, scalable APIs that can handle production workloads.",
-      author: {
-        name: "Alex Rivera",
-        avatar: "",
-        role: "Full Stack Developer"
-      },
-      publishedAt: "Nov 8, 2024",
-      readTime: "10 min read",
-      image: "https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=800&h=500&fit=crop&crop=entropy&auto=format",
-      tags: ["Express", "Node.js", "API"],
-      likes: 189,
-      comments: 34
-    },
-    {
-      id: "4",
-      title: "User Authentication with JWT and Bcrypt",
-      excerpt: "Implement secure user authentication in your Node.js applications using JSON Web Tokens and proper password hashing.",
-      author: {
-        name: "Emma Davis",
-        avatar: "",
-        role: "Security Engineer"
-      },
-      publishedAt: "Nov 6, 2024",
-      readTime: "15 min read",
-      image: "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=500&fit=crop&crop=entropy&auto=format",
-      tags: ["Authentication", "Security", "JWT"],
-      likes: 267,
-      comments: 56
-    },
-    {
-      id: "5",
-      title: "Building RESTful APIs: A Complete Guide",
-      excerpt: "Master the art of designing and implementing RESTful APIs that are intuitive, efficient, and maintainable.",
-      author: {
-        name: "David Kim",
-        avatar: "",
-        role: "API Designer"
-      },
-      publishedAt: "Nov 4, 2024",
-      readTime: "18 min read",
-      image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=500&fit=crop&crop=entropy&auto=format",
-      tags: ["API", "REST", "Design"],
-      likes: 145,
-      comments: 28
-    },
-    {
-      id: "6",
-      title: "Comment System Architecture and Implementation",
-      excerpt: "Design and build a scalable comment system with nested replies, real-time updates, and moderation features.",
-      author: {
-        name: "Lisa Zhang",
-        avatar: "",
-        role: "Frontend Architect"
-      },
-      publishedAt: "Nov 2, 2024",
-      readTime: "14 min read",
-      image: "https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=800&h=500&fit=crop&crop=entropy&auto=format",
-      tags: ["Comments", "Real-time", "Architecture"],
-      likes: 198,
-      comments: 42
-    }
-  ];
-
-  const categories = ["All", "React", "MongoDB", "Express", "Authentication", "API", "TypeScript"];
-
-  const filteredPosts = selectedCategory 
-    ? blogPosts.filter(post => post.tags.includes(selectedCategory))
-    : blogPosts;
+  // Prepare categories for filter
+  const categoryOptions = ['All', ...categories.map(cat => cat.name)];
 
   return (
     <div className="min-h-screen bg-background">
@@ -123,7 +28,35 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8">
         {/* Featured Post */}
         <section className="mb-12">
-          <FeaturedPost {...featuredPost} />
+          {postsLoading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-64 w-full rounded-lg" />
+            </div>
+          ) : featuredPost ? (
+            <FeaturedPost 
+              id={featuredPost.id}
+              title={featuredPost.title}
+              excerpt={featuredPost.excerpt || ''}
+              author={{
+                name: featuredPost.author?.full_name || 'Anonymous',
+                avatar: featuredPost.author?.avatar_url || '',
+                role: 'Author'
+              }}
+              publishedAt={new Date(featuredPost.published_at || featuredPost.created_at).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+              })}
+              readTime={`${featuredPost.reading_time} min read`}
+              image={featuredPost.image_url || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&h=600&fit=crop&crop=entropy&auto=format'}
+              tags={featuredPost.tags?.map(tag => tag.name) || []}
+              likes={featuredPost.likes}
+              comments={0} // TODO: Add comments count
+              slug={featuredPost.slug}
+            />
+          ) : null}
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -132,18 +65,59 @@ const Index = () => {
             {/* Category Filter */}
             <div className="mb-8">
               <h2 className="font-heading text-2xl font-semibold mb-4">Latest Articles</h2>
-              <CategoryFilter 
-                categories={categories}
-                selectedCategory={selectedCategory}
-                onCategorySelect={setSelectedCategory}
-              />
+              {categoriesLoading ? (
+                <div className="flex gap-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-8 w-20" />
+                  ))}
+                </div>
+              ) : (
+                <CategoryFilter 
+                  categories={categoryOptions}
+                  selectedCategory={selectedCategory}
+                  onCategorySelect={setSelectedCategory}
+                />
+              )}
             </div>
 
             {/* Blog Posts Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredPosts.map((post) => (
-                <BlogCard key={post.id} {...post} />
-              ))}
+              {postsLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="space-y-4">
+                    <Skeleton className="h-48 w-full rounded-lg" />
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ))
+              ) : (
+                regularPosts.map((post) => (
+                  <BlogCard 
+                    key={post.id}
+                    id={post.id}
+                    title={post.title}
+                    excerpt={post.excerpt || ''}
+                    author={{
+                      name: post.author?.full_name || 'Anonymous',
+                      avatar: post.author?.avatar_url || '',
+                      role: 'Author'
+                    }}
+                    publishedAt={new Date(post.published_at || post.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                    readTime={`${post.reading_time} min read`}
+                    image={post.image_url || 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=500&fit=crop&crop=entropy&auto=format'}
+                    tags={post.tags?.map(tag => tag.name) || []}
+                    likes={post.likes}
+                    comments={0} // TODO: Add comments count
+                    featured={post.featured}
+                    slug={post.slug}
+                  />
+                ))
+              )}
             </div>
 
             {/* Load More Button */}

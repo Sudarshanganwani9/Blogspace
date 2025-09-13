@@ -18,10 +18,10 @@ interface FeaturedPostProps {
   tags: string[];
   likes: number;
   comments: number;
+  slug: string;
 }
 
 const FeaturedPost = ({ 
-  id, 
   title, 
   excerpt, 
   author, 
@@ -30,7 +30,8 @@ const FeaturedPost = ({
   image, 
   tags, 
   likes, 
-  comments 
+  comments,
+  slug 
 }: FeaturedPostProps) => {
   return (
     <div className="relative overflow-hidden rounded-xl group">
@@ -54,7 +55,7 @@ const FeaturedPost = ({
             ))}
           </div>
           
-          <Link to={`/post/${id}`}>
+          <Link to={`/post/${slug}`}>
             <h1 className="font-heading text-4xl md:text-5xl font-bold mb-4 group-hover:text-blog-primary transition-colors">
               {title}
             </h1>
